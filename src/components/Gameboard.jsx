@@ -5,10 +5,9 @@ import { useState, useEffect } from "react";
 const GameBoard = () => {
   const [cards, setCards] = useState([]);
   const [timer, setTimer] = useState(0);
-  const [difficulty, setDifficulty] = useState("easy");
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(0);
-  const [isGameActive, setIsGameActive] = useState(false);
+  const [isGameActive, setIsGameActive] = useState(true);
   const [choiceOne, setChoiceOne] = useState(null);
   const [choiceTwo, setChoiceTwo] = useState(null);
 
@@ -20,12 +19,13 @@ const GameBoard = () => {
       matched: false,
     }));
     setCards(initializedCards.sort(() => Math.random() - 0.5));
-  }
+  };
+
   // Initialize and shuffle cards
   useEffect(() => {
-    initializedCards()
-resetGame()
-  }, [difficulty]);
+    initializedCards();
+    resetGame();
+  }, []);
 
   // Timer logic
   useEffect(() => {
@@ -42,9 +42,9 @@ resetGame()
     setChoiceOne(null);
     setChoiceTwo(null);
   };
-// Card click handler
+
+  // Card click handler
   const handleCardClick = (clickedCard) => {
-    // Prevent flipping more than two cards at a time
     if (choiceOne && choiceTwo) return;
 
     setMoves((prev) => prev + 1);
@@ -69,8 +69,11 @@ resetGame()
         );
         setCards(matchedCards);
         resetTurn();
+        if (matchedCards.every((card) => card.matched)) {
+          setIsGameActive(false); // Stop the timer
+        }
       } else {
-        // Flip cards back after a delay if they don't match
+        setScore((prev) => prev - 1);
         setTimeout(() => {
           const resetCards = updatedCards.map((card) =>
             card.uniqueId === choiceOne.uniqueId ||
@@ -85,62 +88,58 @@ resetGame()
     }
   };
 
-  // Format time
   const formatTime = (timeInSeconds) => {
     const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, "0");
     const seconds = (timeInSeconds % 60).toString().padStart(2, "0");
     return `${minutes}:${seconds}`;
   };
+
   const resetGame = () => {
     setTimer(0);
     setMoves(0);
     setScore(0);
-  }
-  const gridColsClass =
-  difficulty === "easy" ? "grid-cols-4" : difficulty === "medium" ? "grid-cols-6" : "grid-cols-8";
+    setIsGameActive(false);
+    setChoiceOne(null);
+    setChoiceTwo(null);
+    initializedCards();
+    setIsGameActive(true);
+  };
+
+ 
+
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-screen py-6">
-      <h1 className="mb-3 text-3xl font-bold">Memory Game</h1>
-
-      {/* Timer and Moves */}
-      <div className="flex gap-6 mb-4 text-lg">
-        <span>
-          <strong>Timer:</strong> {formatTime(timer)}
-        </span>
-        <span>
-          <strong>Moves:</strong> {moves}
-        </span>
-        <span>
-          <strong>Score:</strong> {score}
-        </span>
-
-            {/* Difficulty Options */}
-            <div className="mb-6">
-        <label htmlFor="difficulty" className="mr-4 text-lg font-medium">
-          Select Difficulty:
-        </label>
-        <select
-          id="difficulty"
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-          className="px-4 py-2 border rounded-md"
-        >
-          <option value="easy">Easy (4x4)</option>
-          <option value="medium">Medium (6x6)</option>
-          <option value="hard">Hard (8x8)</option>
-        </select>
-      </div>
-      
-      </div>
-
-      {/* Cards Grid */}
-      <ul className={`grid gap-2 ${gridColsClass}`}>
-        {cards.map((card) => (
-          <Card key={card.uniqueId} card={card} onCardClick={handleCardClick} />
-        ))}
-      </ul>
-      <button type="button" className="px-4 py-2 mt-4 font-bold text-white bg-red-500 rounded-md" onClick={resetGame}>Reset Game</button>
+    <div className="flex flex-col items-center justify-center w-full min-h-screen p-6 bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300">
+    <h1 className="mb-3 text-4xl font-extrabold text-gray-800 drop-shadow-lg">Memory Game</h1>
+  
+    {/* Timer and Moves */}
+    <div className="flex gap-6 mb-4 text-lg font-semibold text-gray-800">
+      <span>
+        <strong>Timer:</strong> {formatTime(timer)}
+      </span>
+      <span>
+        <strong>Moves:</strong> {moves}
+      </span>
+      <span>
+        <strong>Score:</strong> {score}
+      </span>
     </div>
+  
+    {/* Cards Grid */}
+    <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {cards.map((card) => (
+        <Card key={card.uniqueId} card={card} onCardClick={handleCardClick} />
+      ))}
+    </ul>
+  
+    <button
+      type="button"
+      className="px-4 py-2 mt-6 font-bold text-white bg-red-500 rounded-md shadow-lg hover:bg-red-400 hover:shadow-xl"
+      onClick={resetGame}
+    >
+      Reset Game
+    </button>
+  </div>
+  
   );
 };
 
